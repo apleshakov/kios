@@ -1,0 +1,8 @@
+.idea
+__pycache__
+dist
+build
+.mypy_cache
+*.egg-info
+.eggs
+pip-wheel-metadata
