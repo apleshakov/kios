@@ -23,7 +23,6 @@ from sys import platform
 
 from .cli import CLI
 from .data import Platform, Application
-from .exception import UnsupportedAppPlatformError
 from . import config, factory
 from .operation import find_and_save_ports, save_ports_from_data_file
 

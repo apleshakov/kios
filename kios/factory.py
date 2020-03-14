@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.event import listen, remove
+from sqlalchemy.event import listen
 
 from . import config
 from .data import Platform, Application
