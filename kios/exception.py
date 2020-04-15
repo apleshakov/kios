@@ -62,3 +62,15 @@ class ToolError(KiosError):
 
     def __str__(self):
         return _('Error running port scan application: {msg}').format(msg=self.msg)
+
+
+class UnexpectedLineError(KiosError):
+
+    def __init__(self, line, line_no):
+        super().__init__(line, line_no)
+        self.line = line
+        self.line_no = line_no
+
+    def __str__(self):
+        return _('Unexpected line {line_no}: {line}').format(line=self.line, line_no=self.line_no)
+

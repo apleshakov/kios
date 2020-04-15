@@ -24,17 +24,18 @@ from ipaddress import ip_address
 import re
 from typing import TYPE_CHECKING
 
-from transitions import Machine
+from transitions import Machine, MachineError
 
 from .data import NETWORK_PROTOCOL, TRANSPORT_PROTOCOL, PORT_NUMBER, EXECUTABLE_NAME, NetworkProtocol, \
     TransportProtocol, ConnectionState
+from .exception import UnexpectedLineError
 
 if TYPE_CHECKING:
     from typing import Optional
 
-_protocol = r'(?P<proto>TCP|UDP)'
+_protocol = rf'(?P<proto>' + '|'.join(pr.name for pr in TransportProtocol) + ')'
 _spacing = r'(?: +)'
-_state = r'(?P<state>[A-Z_]+)'
+_state = r'(?P<state>' + '|'.join(st.name for st in ConnectionState) + ')'
 _hex_number = r'(?:(?:\d|[a-fA-F])+)'
 _local_ip4_address = r'(?P<local_ipv4_address>\d+\.\d+\.\d+\.\d+)'
 _foreign_ip4_address = r'(?:\d+\.\d+\.\d+\.\d+)'
@@ -54,7 +55,6 @@ _process_name = r'(?P<proc_name>.+)'
 _process_entry = rf'(?:^{_spacing}?\[{_process_name}\]$)'
 _generic_entry = rf'(?:^.+$)'
 _data_entry = rf'(?:{_network_entry}|{_process_entry}|{_generic_entry})'
-_data_entry_re = re.compile(_data_entry, re.MULTILINE)
 _data_entry_line_re = re.compile(_data_entry)
 
 
@@ -138,19 +138,22 @@ class WindowsNetstatPortDataParser:
 
     def extract_data(self, data: str):
         self._model.start()
-        for match in _data_entry_re.finditer(data):
-            proto, ipv4_addr, ipv6_addr, port, conn_state, proc_name = match.groups()
-            self._handle_data(proto, ipv4_addr, ipv6_addr, port, conn_state, proc_name)
+        for line_no, line in enumerate(data.splitlines()):
+            self._consume_line(line, line_no + 1)
         self._model.finish()
 
-    def _consume_line(self, line: str):
-        match = _data_entry_re.match(line)
+    def _consume_line(self, line: str, line_no: int):
+        line = line.rstrip()
+        match = _data_entry_line_re.match(line)
         if match:
             proto, ipv4_addr, ipv6_addr, port, conn_state, proc_name = match.groups()
-            self._handle_data(proto, ipv4_addr, ipv6_addr, port, conn_state, proc_name)
+            try:
+                self._handle_data(proto, ipv4_addr, ipv6_addr, port, conn_state, proc_name)
+            except MachineError:
+                raise UnexpectedLineError(line, line_no)
 
     @contextmanager
-    def line_stream_consuming_protocol(self):
+    def line_stream_consumer(self):
         self._model.start()
         yield self._consume_line
         self._model.finish()

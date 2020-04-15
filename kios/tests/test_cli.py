@@ -25,7 +25,8 @@ from kios.cli import ConsoleOperationControl, CLIFeedback, CLI, _info, _error
 from kios import config
 from kios.core import KiosCore
 from kios.data import NetworkProtocol, TransportProtocol
-from kios.exception import DoRollback, ExecutableAssignedError, ToolError, BusyDatabaseError, UnsupportedAppPlatformError
+from kios.exception import DoRollback, ExecutableAssignedError, ToolError, BusyDatabaseError, \
+    UnsupportedAppPlatformError, UnexpectedLineError
 from .helper import patch_config_app_platform, TestConsoleOperationControl, inside_test_console_operation_control
 
 
@@ -237,6 +238,9 @@ class SkippedExceptionMessageTestCase(TestCase):
 
     def test_unsupported_app_platform_message(self):
         str(UnsupportedAppPlatformError())
+
+    def test_unexpected_line_message(self):
+        str(UnexpectedLineError('abc', 1))
 
 
 @patch('builtins.print', autospec=True)

@@ -24,6 +24,7 @@ from unittest.mock import Mock, call
 from kios.data import NetworkProtocol, TransportProtocol, ConnectionState, NETWORK_PROTOCOL, TRANSPORT_PROTOCOL, \
     PORT_NUMBER, EXECUTABLE_NAME
 from kios.parser import PortCollector, WindowsNetstatPortDataParser
+from kios.exception import UnexpectedLineError
 from .helper import get_test_data, open_test_file, patch_config_app_platform
 
 
@@ -59,7 +60,7 @@ class WindowsNetstatPortDataParserTestCase(TestCase):
                       call(None, NetworkProtocol.IPv4, '0.0.0.0', TransportProtocol.TCP, 4,
                            ConnectionState.ESTABLISHED),
                       call('app3.exe', NetworkProtocol.IPv6, '::', TransportProtocol.TCP, 15,
-                           None),
+                           ConnectionState.CLOSE_WAIT),
                       call('app1.exe', NetworkProtocol.IPv6, '::', TransportProtocol.TCP, 1,
                            ConnectionState.LISTENING),
                       call(None, NetworkProtocol.IPv6, '::', TransportProtocol.TCP, 2,
@@ -87,8 +88,24 @@ class WindowsNetstatPortDataParserTestCase(TestCase):
 
     def test_line_stream_parsing(self):
         with open_test_file('win_netstat.txt') as data_file:
-            with self.dp.line_stream_consuming_protocol() as consume:
-                for line in data_file:
-                    consume(line)
+            with self.dp.line_stream_consumer() as consume:
+                for line_no, line in enumerate(data_file):
+                    consume(line, line_no)
         self.assertEqual(self.pc.call_count, 11)
         self.pc.assert_has_calls(self.expected_calls, any_order=True)
+
+    def test_unexpected_data_handling(self):
+        data = get_test_data('win_netstat3.txt')
+        with self.assertRaises(UnexpectedLineError) as c:
+            self.dp.extract_data(data)
+        self.assertEqual(c.exception.line_no, 6)
+        self.assertEqual(c.exception.line, ' [app3.exe]')
+
+    def test_unexpected_data_handling2(self):
+        with self.assertRaises(UnexpectedLineError) as c:
+            with open_test_file('win_netstat3.txt') as data_file:
+                with self.dp.line_stream_consumer() as consume:
+                    for line_no, line in enumerate(data_file):
+                        consume(line, line_no + 1)
+        self.assertEqual(c.exception.line_no, 6)
+        self.assertEqual(c.exception.line, ' [app3.exe]')

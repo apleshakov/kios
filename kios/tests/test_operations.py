@@ -24,7 +24,7 @@ from unittest.mock import patch, call
 from kios import config
 from kios.data import EXECUTABLE_NAME, NETWORK_PROTOCOL, TRANSPORT_PROTOCOL, PORT_NUMBER, NetworkProtocol, \
     TransportProtocol
-from kios.exception import DoRollback
+from kios.exception import DoRollback, UnexpectedLineError
 from kios.operation import find_and_save_ports, save_ports_from_data_file
 from .helper import get_test_data, TestOperationControl, get_test_file_path, patch_config_app_platform
 
@@ -95,3 +95,11 @@ class OperationsTestCase(TestCase):
         with self.assertRaises(RuntimeError):
             save_ports_from_data_file(TestOperationControl())
         persistence_manager.return_value.save_port_data.assert_not_called()
+
+    @patch('kios.config.data_file', new=get_test_file_path('win_netstat3.txt'))
+    def test_save_ports_from_data_file_behaviour5(self, persistence_manager):
+        with self.assertRaises(UnexpectedLineError) as c:
+            save_ports_from_data_file(TestOperationControl())
+        persistence_manager.return_value.save_port_data.assert_not_called()
+        self.assertEqual(c.exception.line_no, 6)
+        self.assertEqual(c.exception.line, ' [app3.exe]')

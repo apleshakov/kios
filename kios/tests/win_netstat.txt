@@ -15,7 +15,7 @@ Active Connections
   TCP    [::]:1                 [::]:0                 LISTENING
   ComponentTwo
  [app1.exe]
-  TCP    [::]:15                [::]:0                 SFSFRRFGHWR
+  TCP    [::]:15                [::]:0                 CLOSE_WAIT
   ComponentThree
  [app3.exe]
   TCP    [::]:2                 [::]:0                 LISTENING

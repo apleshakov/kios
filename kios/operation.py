@@ -53,11 +53,11 @@ def save_ports_from_data_file(control: OperationControl) -> None:
         pm = factory.persistence_manager()
         bs = config.import_batch_size
         with open(sf, 'rt') as fo:
-            with dp.line_stream_consuming_protocol() as consume:
-                for line in fo:
+            with dp.line_stream_consumer() as consume:
+                for line_no, line in enumerate(fo):
                     if control.interrupted:
                         raise DoRollback
-                    consume(line)
+                    consume(line, line_no + 1)
                     if len(pc.port_data) >= bs:
                         pm.save_port_data(pc.port_data)
                         pc.reset()
