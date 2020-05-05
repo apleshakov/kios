@@ -6,9 +6,8 @@ Kios
 Introduction
 ------------
 
-Kios is a tool to collect and store data on TCP/UDP ports listened on by
-application software. Currently Kios supports netstat on Windows platform
-as the only source of port data and SQLite as the only database backend.
+Kios is a tool to collect and store TCP/UDP port usage data. Currently Kios supports netstat on
+Windows platform as the only source of port data and SQLite as the only database backend.
 
 Ports bound to loopback interfaces are ignored.
 
