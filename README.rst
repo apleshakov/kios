@@ -11,6 +11,11 @@ Windows platform as the only source of port data and SQLite as the only database
 
 Ports bound to loopback interfaces are ignored.
 
+Installation
+------------
+
+Releases are available from PyPI at https://pypi.org/project/kios/
+
 Usage
 -----
 
